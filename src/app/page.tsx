@@ -1,103 +1,312 @@
-import Image from "next/image";
+"use client"
 
-export default function Home() {
+import type React from "react"
+
+import { useState, useRef, type ChangeEvent } from "react"
+import { Camera, Download, Upload, Lock, Unlock } from "lucide-react"
+
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Label } from "@/components/ui/label"
+import { ModeToggle } from "@/components/mode-toggle"
+import { Input } from "@/components/ui/input"
+import { Switch } from "@/components/ui/switch"
+import { Separator } from "@/components/ui/separator"
+
+// Filter options with their CSS filter values
+const filterOptions = [
+  { name: "Normal", value: "none" },
+  { name: "Grayscale", value: "grayscale(100%)" },
+  { name: "Sepia", value: "sepia(100%)" },
+  { name: "Invert", value: "invert(100%)" },
+  { name: "Blur", value: "blur(5px)" },
+  { name: "Brightness", value: "brightness(150%)" },
+  { name: "Contrast", value: "contrast(200%)" },
+  { name: "Hue Rotate", value: "hue-rotate(90deg)" },
+  { name: "Saturate", value: "saturate(200%)" },
+]
+
+export default function ImageFilterApp() {
+  const [selectedImage, setSelectedImage] = useState<string | null>(null)
+  const [selectedFilter, setSelectedFilter] = useState("none")
+  const [isHovering, setIsHovering] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Image dimensions state
+  const [originalWidth, setOriginalWidth] = useState(0)
+  const [originalHeight, setOriginalHeight] = useState(0)
+  const [resizeWidth, setResizeWidth] = useState(0)
+  const [resizeHeight, setResizeHeight] = useState(0)
+  const [maintainAspectRatio, setMaintainAspectRatio] = useState(true)
+  const [aspectRatio, setAspectRatio] = useState(1)
+
+  // Handle image upload
+  const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onload = () => {
+        setSelectedImage(reader.result as string)
+
+        // Get original dimensions when image loads
+        const img = new Image()
+        img.onload = () => {
+          setOriginalWidth(img.width)
+          setOriginalHeight(img.height)
+          setResizeWidth(img.width)
+          setResizeHeight(img.height)
+          setAspectRatio(img.width / img.height)
+        }
+        img.src = reader.result as string
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  // Handle width change with aspect ratio
+  const handleWidthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newWidth = Number.parseInt(e.target.value) || 0
+    setResizeWidth(newWidth)
+
+    if (maintainAspectRatio && newWidth > 0) {
+      setResizeHeight(Math.round(newWidth / aspectRatio))
+    }
+  }
+
+  // Handle height change with aspect ratio
+  const handleHeightChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newHeight = Number.parseInt(e.target.value) || 0
+    setResizeHeight(newHeight)
+
+    if (maintainAspectRatio && newHeight > 0) {
+      setResizeWidth(Math.round(newHeight * aspectRatio))
+    }
+  }
+
+  // Toggle aspect ratio lock
+  const handleAspectRatioToggle = (checked: boolean) => {
+    setMaintainAspectRatio(checked)
+    if (checked && resizeWidth > 0) {
+      // Recalculate height based on current width to ensure proper ratio
+      setResizeHeight(Math.round(resizeWidth / aspectRatio))
+    }
+  }
+
+  // Trigger file input click
+  const handleUploadClick = () => {
+    fileInputRef.current?.click()
+  }
+
+  // Download filtered and resized image
+  const handleDownload = () => {
+    if (!selectedImage) return
+
+    const canvas = document.createElement("canvas")
+    const ctx = canvas.getContext("2d")
+    const img = new Image()
+
+    img.crossOrigin = "anonymous"
+    img.onload = () => {
+      // Set canvas to the resize dimensions
+      canvas.width = resizeWidth || img.width
+      canvas.height = resizeHeight || img.height
+
+      if (ctx) {
+        // Apply the selected filter to the canvas context
+        ctx.filter = selectedFilter
+        ctx.drawImage(img, 0, 0, img.width, img.height, 0, 0, canvas.width, canvas.height)
+
+        // Create download link
+        const link = document.createElement("a")
+        link.download = "filtered-image.png"
+        link.href = canvas.toDataURL("image/png")
+        link.click()
+      }
+    }
+    img.src = selectedImage
+  }
+
+  // Handle file drop
+  const handleFileDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsHovering(false)
+
+    const file = e.dataTransfer.files?.[0]
+    if (file && file.type.startsWith("image/")) {
+      const reader = new FileReader()
+      reader.onload = () => {
+        setSelectedImage(reader.result as string)
+
+        // Get original dimensions when image loads
+        const img = new Image()
+        img.onload = () => {
+          setOriginalWidth(img.width)
+          setOriginalHeight(img.height)
+          setResizeWidth(img.width)
+          setResizeHeight(img.height)
+          setAspectRatio(img.width / img.height)
+        }
+        img.src = reader.result as string
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <div className="container mx-auto py-10 px-4">
+      <div className="max-w-3xl mx-auto">
+        <header className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold">Image Filter App</h1>
+          <ModeToggle />
+        </header>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+        <div className="grid gap-8">
+          {/* Image Upload Area */}
+          <Card>
+            <CardContent className="p-6">
+              <div
+                className={`border-2 border-dashed rounded-lg p-12 text-center transition-colors ${
+                  isHovering ? "border-primary bg-primary/5" : "border-muted-foreground/20"
+                }`}
+                onDragOver={(e) => {
+                  e.preventDefault()
+                  setIsHovering(true)
+                }}
+                onDragLeave={() => setIsHovering(false)}
+                onDrop={handleFileDrop}
+              >
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  ref={fileInputRef}
+                  onChange={handleImageUpload}
+                />
+
+                <div className="flex flex-col items-center gap-4">
+                  <Camera className="h-12 w-12 text-muted-foreground" />
+                  <div>
+                    <p className="text-lg font-medium">Drag and drop your image here</p>
+                    <p className="text-sm text-muted-foreground mt-1">or click the button below to browse</p>
+                  </div>
+                  <Button onClick={handleUploadClick} className="mt-2">
+                    <Upload className="mr-2 h-4 w-4" />
+                    Upload Image
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Filter Controls */}
+          {selectedImage && (
+            <div className="grid gap-8 md:grid-cols-[1fr_300px]">
+              {/* Image Preview */}
+              <Card>
+                <CardContent className="p-6">
+                  <div className="aspect-video relative rounded-lg overflow-hidden bg-black/5 dark:bg-white/5 flex items-center justify-center">
+                    <div className="relative max-h-full max-w-full" style={{ filter: selectedFilter }}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={selectedImage || "/placeholder.svg"}
+                        alt="Preview"
+                        className="max-h-[60vh] max-w-full object-contain"
+                      />
+                    </div>
+                  </div>
+
+                  {originalWidth > 0 && (
+                    <div className="mt-2 text-sm text-muted-foreground text-center">
+                      Original size: {originalWidth} × {originalHeight} px
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Filter and Resize Options */}
+              <Card>
+                <CardContent className="p-6">
+                  <div className="space-y-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="filter">Select Filter</Label>
+                      <Select value={selectedFilter} onValueChange={setSelectedFilter}>
+                        <SelectTrigger id="filter">
+                          <SelectValue placeholder="Choose a filter" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {filterOptions.map((filter) => (
+                            <SelectItem key={filter.value} value={filter.value}>
+                              {filter.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <Separator />
+
+                    {/* Resize Controls */}
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="resize">Resize Image</Label>
+                        <div className="flex items-center space-x-2">
+                          <Switch
+                            id="aspect-ratio"
+                            checked={maintainAspectRatio}
+                            onCheckedChange={handleAspectRatioToggle}
+                          />
+                          <Label htmlFor="aspect-ratio" className="text-sm flex items-center">
+                            {maintainAspectRatio ? (
+                              <Lock className="h-3 w-3 mr-1" />
+                            ) : (
+                              <Unlock className="h-3 w-3 mr-1" />
+                            )}
+                            Aspect Ratio
+                          </Label>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="width" className="text-xs">
+                            Width (px)
+                          </Label>
+                          <Input
+                            id="width"
+                            type="number"
+                            min="1"
+                            value={resizeWidth || ""}
+                            onChange={handleWidthChange}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="height" className="text-xs">
+                            Height (px)
+                          </Label>
+                          <Input
+                            id="height"
+                            type="number"
+                            min="1"
+                            value={resizeHeight || ""}
+                            onChange={handleHeightChange}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <Button className="w-full" onClick={handleDownload}>
+                      <Download className="mr-2 h-4 w-4" />
+                      Download Image
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      </div>
     </div>
-  );
+  )
 }
+
