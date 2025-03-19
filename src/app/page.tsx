@@ -1,13 +1,18 @@
 "use client"
 
+import type React from "react"
+
 import { useState, useRef, type ChangeEvent } from "react"
-import { Camera, Download, Upload } from "lucide-react"
+import { Camera, Download, Upload, Lock, Unlock } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
 import { ModeToggle } from "@/components/mode-toggle"
+import { Input } from "@/components/ui/input"
+import { Switch } from "@/components/ui/switch"
+import { Separator } from "@/components/ui/separator"
 
 // Filter options with their CSS filter values
 const filterOptions = [
@@ -28,6 +33,14 @@ export default function ImageFilterApp() {
   const [isHovering, setIsHovering] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  // Image dimensions state
+  const [originalWidth, setOriginalWidth] = useState(0)
+  const [originalHeight, setOriginalHeight] = useState(0)
+  const [resizeWidth, setResizeWidth] = useState(0)
+  const [resizeHeight, setResizeHeight] = useState(0)
+  const [maintainAspectRatio, setMaintainAspectRatio] = useState(true)
+  const [aspectRatio, setAspectRatio] = useState(1)
+
   // Handle image upload
   const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -35,8 +48,48 @@ export default function ImageFilterApp() {
       const reader = new FileReader()
       reader.onload = () => {
         setSelectedImage(reader.result as string)
+
+        // Get original dimensions when image loads
+        const img = new Image()
+        img.onload = () => {
+          setOriginalWidth(img.width)
+          setOriginalHeight(img.height)
+          setResizeWidth(img.width)
+          setResizeHeight(img.height)
+          setAspectRatio(img.width / img.height)
+        }
+        img.src = reader.result as string
       }
       reader.readAsDataURL(file)
+    }
+  }
+
+  // Handle width change with aspect ratio
+  const handleWidthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newWidth = Number.parseInt(e.target.value) || 0
+    setResizeWidth(newWidth)
+
+    if (maintainAspectRatio && newWidth > 0) {
+      setResizeHeight(Math.round(newWidth / aspectRatio))
+    }
+  }
+
+  // Handle height change with aspect ratio
+  const handleHeightChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newHeight = Number.parseInt(e.target.value) || 0
+    setResizeHeight(newHeight)
+
+    if (maintainAspectRatio && newHeight > 0) {
+      setResizeWidth(Math.round(newHeight * aspectRatio))
+    }
+  }
+
+  // Toggle aspect ratio lock
+  const handleAspectRatioToggle = (checked: boolean) => {
+    setMaintainAspectRatio(checked)
+    if (checked && resizeWidth > 0) {
+      // Recalculate height based on current width to ensure proper ratio
+      setResizeHeight(Math.round(resizeWidth / aspectRatio))
     }
   }
 
@@ -45,7 +98,7 @@ export default function ImageFilterApp() {
     fileInputRef.current?.click()
   }
 
-  // Download filtered image
+  // Download filtered and resized image
   const handleDownload = () => {
     if (!selectedImage) return
 
@@ -55,13 +108,14 @@ export default function ImageFilterApp() {
 
     img.crossOrigin = "anonymous"
     img.onload = () => {
-      canvas.width = img.width
-      canvas.height = img.height
+      // Set canvas to the resize dimensions
+      canvas.width = resizeWidth || img.width
+      canvas.height = resizeHeight || img.height
 
       if (ctx) {
         // Apply the selected filter to the canvas context
         ctx.filter = selectedFilter
-        ctx.drawImage(img, 0, 0)
+        ctx.drawImage(img, 0, 0, img.width, img.height, 0, 0, canvas.width, canvas.height)
 
         // Create download link
         const link = document.createElement("a")
@@ -71,6 +125,32 @@ export default function ImageFilterApp() {
       }
     }
     img.src = selectedImage
+  }
+
+  // Handle file drop
+  const handleFileDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsHovering(false)
+
+    const file = e.dataTransfer.files?.[0]
+    if (file && file.type.startsWith("image/")) {
+      const reader = new FileReader()
+      reader.onload = () => {
+        setSelectedImage(reader.result as string)
+
+        // Get original dimensions when image loads
+        const img = new Image()
+        img.onload = () => {
+          setOriginalWidth(img.width)
+          setOriginalHeight(img.height)
+          setResizeWidth(img.width)
+          setResizeHeight(img.height)
+          setAspectRatio(img.width / img.height)
+        }
+        img.src = reader.result as string
+      }
+      reader.readAsDataURL(file)
+    }
   }
 
   return (
@@ -94,19 +174,7 @@ export default function ImageFilterApp() {
                   setIsHovering(true)
                 }}
                 onDragLeave={() => setIsHovering(false)}
-                onDrop={(e) => {
-                  e.preventDefault()
-                  setIsHovering(false)
-
-                  const file = e.dataTransfer.files?.[0]
-                  if (file && file.type.startsWith("image/")) {
-                    const reader = new FileReader()
-                    reader.onload = () => {
-                      setSelectedImage(reader.result as string)
-                    }
-                    reader.readAsDataURL(file)
-                  }
-                }}
+                onDrop={handleFileDrop}
               >
                 <input
                   type="file"
@@ -147,10 +215,16 @@ export default function ImageFilterApp() {
                       />
                     </div>
                   </div>
+
+                  {originalWidth > 0 && (
+                    <div className="mt-2 text-sm text-muted-foreground text-center">
+                      Original size: {originalWidth} × {originalHeight} px
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 
-              {/* Filter Options */}
+              {/* Filter and Resize Options */}
               <Card>
                 <CardContent className="p-6">
                   <div className="space-y-6">
@@ -170,9 +244,60 @@ export default function ImageFilterApp() {
                       </Select>
                     </div>
 
+                    <Separator />
+
+                    {/* Resize Controls */}
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="resize">Resize Image</Label>
+                        <div className="flex items-center space-x-2">
+                          <Switch
+                            id="aspect-ratio"
+                            checked={maintainAspectRatio}
+                            onCheckedChange={handleAspectRatioToggle}
+                          />
+                          <Label htmlFor="aspect-ratio" className="text-sm flex items-center">
+                            {maintainAspectRatio ? (
+                              <Lock className="h-3 w-3 mr-1" />
+                            ) : (
+                              <Unlock className="h-3 w-3 mr-1" />
+                            )}
+                            Aspect Ratio
+                          </Label>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="width" className="text-xs">
+                            Width (px)
+                          </Label>
+                          <Input
+                            id="width"
+                            type="number"
+                            min="1"
+                            value={resizeWidth || ""}
+                            onChange={handleWidthChange}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="height" className="text-xs">
+                            Height (px)
+                          </Label>
+                          <Input
+                            id="height"
+                            type="number"
+                            min="1"
+                            value={resizeHeight || ""}
+                            onChange={handleHeightChange}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
                     <Button className="w-full" onClick={handleDownload}>
                       <Download className="mr-2 h-4 w-4" />
-                      Download Filtered Image
+                      Download Image
                     </Button>
                   </div>
                 </CardContent>
