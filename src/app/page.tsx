@@ -17,14 +17,14 @@ import { Separator } from "@/components/ui/separator"
 // Filter options with their CSS filter values
 const filterOptions = [
   { name: "Normal", value: "none" },
-  { name: "Grayscale", value: "grayscale(100%)" },
+  { name: "Escala Cinza", value: "grayscale(100%)" },
   { name: "Sepia", value: "sepia(100%)" },
-  { name: "Invert", value: "invert(100%)" },
+  { name: "Invertido", value: "invert(100%)" },
   { name: "Blur", value: "blur(5px)" },
-  { name: "Brightness", value: "brightness(150%)" },
-  { name: "Contrast", value: "contrast(200%)" },
-  { name: "Hue Rotate", value: "hue-rotate(90deg)" },
-  { name: "Saturate", value: "saturate(200%)" },
+  { name: "Brilho", value: "brightness(150%)" },
+  { name: "Contraste", value: "contrast(200%)" },
+  { name: "Matiz", value: "hue-rotate(90deg)" },
+  { name: "Saturado", value: "saturate(200%)" },
 ]
 
 export default function ImageFilterApp() {
@@ -157,7 +157,7 @@ export default function ImageFilterApp() {
     <div className="container mx-auto py-10 px-4">
       <div className="max-w-3xl mx-auto">
         <header className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">Image Filter App</h1>
+          <h1 className="text-3xl font-bold">PixArray</h1>
           <ModeToggle />
         </header>
 
@@ -187,12 +187,12 @@ export default function ImageFilterApp() {
                 <div className="flex flex-col items-center gap-4">
                   <Camera className="h-12 w-12 text-muted-foreground" />
                   <div>
-                    <p className="text-lg font-medium">Drag and drop your image here</p>
-                    <p className="text-sm text-muted-foreground mt-1">or click the button below to browse</p>
+                    <p className="text-lg font-medium">Arraste a imagem aqui</p>
+                    <p className="text-sm text-muted-foreground mt-1">ou clique no botão abaixo para pesquisar</p>
                   </div>
                   <Button onClick={handleUploadClick} className="mt-2">
                     <Upload className="mr-2 h-4 w-4" />
-                    Upload Image
+                    Selecionar Imagem
                   </Button>
                 </div>
               </div>
@@ -218,7 +218,7 @@ export default function ImageFilterApp() {
 
                   {originalWidth > 0 && (
                     <div className="mt-2 text-sm text-muted-foreground text-center">
-                      Original size: {originalWidth} × {originalHeight} px
+                      Tamanho Original: {originalWidth} × {originalHeight} px
                     </div>
                   )}
                 </CardContent>
@@ -229,10 +229,10 @@ export default function ImageFilterApp() {
                 <CardContent className="p-6">
                   <div className="space-y-6">
                     <div className="space-y-2">
-                      <Label htmlFor="filter">Select Filter</Label>
+                      <Label htmlFor="filter">Selecione um filtro</Label>
                       <Select value={selectedFilter} onValueChange={setSelectedFilter}>
                         <SelectTrigger id="filter">
-                          <SelectValue placeholder="Choose a filter" />
+                          <SelectValue placeholder="Selecione um filtro" />
                         </SelectTrigger>
                         <SelectContent>
                           {filterOptions.map((filter) => (
@@ -249,7 +249,7 @@ export default function ImageFilterApp() {
                     {/* Resize Controls */}
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
-                        <Label htmlFor="resize">Resize Image</Label>
+                        <Label htmlFor="resize">Redimensionar</Label>
                         <div className="flex items-center space-x-2">
                           <Switch
                             id="aspect-ratio"
@@ -270,7 +270,7 @@ export default function ImageFilterApp() {
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label htmlFor="width" className="text-xs">
-                            Width (px)
+                            Largura (px)
                           </Label>
                           <Input
                             id="width"
@@ -282,7 +282,7 @@ export default function ImageFilterApp() {
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor="height" className="text-xs">
-                            Height (px)
+                            Altura (px)
                           </Label>
                           <Input
                             id="height"
@@ -297,7 +297,7 @@ export default function ImageFilterApp() {
 
                     <Button className="w-full" onClick={handleDownload}>
                       <Download className="mr-2 h-4 w-4" />
-                      Download Image
+                      Baixar Imagem
                     </Button>
                   </div>
                 </CardContent>
