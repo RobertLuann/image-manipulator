@@ -1,163 +1,184 @@
-"use client"
+'use client';
 
-import type React from "react"
+import type React from 'react';
 
-import { useState, useRef, type ChangeEvent } from "react"
-import { Camera, Download, Upload, Lock, Unlock } from "lucide-react"
+import { useState, useRef, type ChangeEvent } from 'react';
+import { Camera, Download, Upload, Lock, Unlock, Weight } from 'lucide-react';
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Label } from "@/components/ui/label"
-import { ModeToggle } from "@/components/mode-toggle"
-import { Input } from "@/components/ui/input"
-import { Switch } from "@/components/ui/switch"
-import { Separator } from "@/components/ui/separator"
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { ModeToggle } from '@/components/mode-toggle';
+import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
+import { Separator } from '@/components/ui/separator';
+import { pressStart2P } from './layout';
 
 // Filter options with their CSS filter values
 const filterOptions = [
-  { name: "Normal", value: "none" },
-  { name: "Escala Cinza", value: "grayscale(100%)" },
-  { name: "Sepia", value: "sepia(100%)" },
-  { name: "Invertido", value: "invert(100%)" },
-  { name: "Blur", value: "blur(5px)" },
-  { name: "Brilho", value: "brightness(150%)" },
-  { name: "Contraste", value: "contrast(200%)" },
-  { name: "Matiz", value: "hue-rotate(90deg)" },
-  { name: "Saturado", value: "saturate(200%)" },
-]
+  { name: 'Normal', value: 'none' },
+  { name: 'Escala Cinza', value: 'grayscale(100%)' },
+  { name: 'Sepia', value: 'sepia(100%)' },
+  { name: 'Invertido', value: 'invert(100%)' },
+  { name: 'Blur', value: 'blur(5px)' },
+  { name: 'Brilho', value: 'brightness(150%)' },
+  { name: 'Contraste', value: 'contrast(200%)' },
+  { name: 'Matiz', value: 'hue-rotate(90deg)' },
+  { name: 'Saturado', value: 'saturate(200%)' },
+];
 
 export default function ImageFilterApp() {
-  const [selectedImage, setSelectedImage] = useState<string | null>(null)
-  const [selectedFilter, setSelectedFilter] = useState("none")
-  const [isHovering, setIsHovering] = useState(false)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedFilter, setSelectedFilter] = useState('none');
+  const [isHovering, setIsHovering] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Image dimensions state
-  const [originalWidth, setOriginalWidth] = useState(0)
-  const [originalHeight, setOriginalHeight] = useState(0)
-  const [resizeWidth, setResizeWidth] = useState(0)
-  const [resizeHeight, setResizeHeight] = useState(0)
-  const [maintainAspectRatio, setMaintainAspectRatio] = useState(true)
-  const [aspectRatio, setAspectRatio] = useState(1)
+  const [originalWidth, setOriginalWidth] = useState(0);
+  const [originalHeight, setOriginalHeight] = useState(0);
+  const [resizeWidth, setResizeWidth] = useState(0);
+  const [resizeHeight, setResizeHeight] = useState(0);
+  const [maintainAspectRatio, setMaintainAspectRatio] = useState(true);
+  const [aspectRatio, setAspectRatio] = useState(1);
 
   // Handle image upload
   const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
+    const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader()
+      const reader = new FileReader();
       reader.onload = () => {
-        setSelectedImage(reader.result as string)
+        setSelectedImage(reader.result as string);
 
         // Get original dimensions when image loads
-        const img = new Image()
+        const img = new Image();
         img.onload = () => {
-          setOriginalWidth(img.width)
-          setOriginalHeight(img.height)
-          setResizeWidth(img.width)
-          setResizeHeight(img.height)
-          setAspectRatio(img.width / img.height)
-        }
-        img.src = reader.result as string
-      }
-      reader.readAsDataURL(file)
+          setOriginalWidth(img.width);
+          setOriginalHeight(img.height);
+          setResizeWidth(img.width);
+          setResizeHeight(img.height);
+          setAspectRatio(img.width / img.height);
+        };
+        img.src = reader.result as string;
+      };
+      reader.readAsDataURL(file);
     }
-  }
+  };
 
   // Handle width change with aspect ratio
   const handleWidthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newWidth = Number.parseInt(e.target.value) || 0
-    setResizeWidth(newWidth)
+    const newWidth = Number.parseInt(e.target.value) || 0;
+    setResizeWidth(newWidth);
 
     if (maintainAspectRatio && newWidth > 0) {
-      setResizeHeight(Math.round(newWidth / aspectRatio))
+      setResizeHeight(Math.round(newWidth / aspectRatio));
     }
-  }
+  };
 
   // Handle height change with aspect ratio
   const handleHeightChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newHeight = Number.parseInt(e.target.value) || 0
-    setResizeHeight(newHeight)
+    const newHeight = Number.parseInt(e.target.value) || 0;
+    setResizeHeight(newHeight);
 
     if (maintainAspectRatio && newHeight > 0) {
-      setResizeWidth(Math.round(newHeight * aspectRatio))
+      setResizeWidth(Math.round(newHeight * aspectRatio));
     }
-  }
+  };
 
   // Toggle aspect ratio lock
   const handleAspectRatioToggle = (checked: boolean) => {
-    setMaintainAspectRatio(checked)
+    setMaintainAspectRatio(checked);
     if (checked && resizeWidth > 0) {
       // Recalculate height based on current width to ensure proper ratio
-      setResizeHeight(Math.round(resizeWidth / aspectRatio))
+      setResizeHeight(Math.round(resizeWidth / aspectRatio));
     }
-  }
+  };
 
   // Trigger file input click
   const handleUploadClick = () => {
-    fileInputRef.current?.click()
-  }
+    fileInputRef.current?.click();
+  };
 
   // Download filtered and resized image
   const handleDownload = () => {
-    if (!selectedImage) return
+    if (!selectedImage) return;
 
-    const canvas = document.createElement("canvas")
-    const ctx = canvas.getContext("2d")
-    const img = new Image()
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
 
-    img.crossOrigin = "anonymous"
+    img.crossOrigin = 'anonymous';
     img.onload = () => {
       // Set canvas to the resize dimensions
-      canvas.width = resizeWidth || img.width
-      canvas.height = resizeHeight || img.height
+      canvas.width = resizeWidth || img.width;
+      canvas.height = resizeHeight || img.height;
 
       if (ctx) {
         // Apply the selected filter to the canvas context
-        ctx.filter = selectedFilter
-        ctx.drawImage(img, 0, 0, img.width, img.height, 0, 0, canvas.width, canvas.height)
+        ctx.filter = selectedFilter;
+        ctx.drawImage(
+          img,
+          0,
+          0,
+          img.width,
+          img.height,
+          0,
+          0,
+          canvas.width,
+          canvas.height,
+        );
 
         // Create download link
-        const link = document.createElement("a")
-        link.download = "filtered-image.png"
-        link.href = canvas.toDataURL("image/png")
-        link.click()
+        const link = document.createElement('a');
+        link.download = 'filtered-image.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
       }
-    }
-    img.src = selectedImage
-  }
+    };
+    img.src = selectedImage;
+  };
 
   // Handle file drop
   const handleFileDrop = (e: React.DragEvent) => {
-    e.preventDefault()
-    setIsHovering(false)
+    e.preventDefault();
+    setIsHovering(false);
 
-    const file = e.dataTransfer.files?.[0]
-    if (file && file.type.startsWith("image/")) {
-      const reader = new FileReader()
+    const file = e.dataTransfer.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      const reader = new FileReader();
       reader.onload = () => {
-        setSelectedImage(reader.result as string)
+        setSelectedImage(reader.result as string);
 
         // Get original dimensions when image loads
-        const img = new Image()
+        const img = new Image();
         img.onload = () => {
-          setOriginalWidth(img.width)
-          setOriginalHeight(img.height)
-          setResizeWidth(img.width)
-          setResizeHeight(img.height)
-          setAspectRatio(img.width / img.height)
-        }
-        img.src = reader.result as string
-      }
-      reader.readAsDataURL(file)
+          setOriginalWidth(img.width);
+          setOriginalHeight(img.height);
+          setResizeWidth(img.width);
+          setResizeHeight(img.height);
+          setAspectRatio(img.width / img.height);
+        };
+        img.src = reader.result as string;
+      };
+      reader.readAsDataURL(file);
     }
-  }
+  };
 
   return (
     <div className="container mx-auto py-10 px-4">
       <div className="max-w-3xl mx-auto">
         <header className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">PixArray</h1>
+          <h1
+            className={`${pressStart2P.className} text-3xl font-bold pixelated`}
+          >
+            PixArray
+          </h1>
           <ModeToggle />
         </header>
 
@@ -167,11 +188,13 @@ export default function ImageFilterApp() {
             <CardContent className="p-6">
               <div
                 className={`border-2 border-dashed rounded-lg p-12 text-center transition-colors ${
-                  isHovering ? "border-primary bg-primary/5" : "border-muted-foreground/20"
+                  isHovering
+                    ? 'border-primary bg-primary/5'
+                    : 'border-muted-foreground/20'
                 }`}
-                onDragOver={(e) => {
-                  e.preventDefault()
-                  setIsHovering(true)
+                onDragOver={e => {
+                  e.preventDefault();
+                  setIsHovering(true);
                 }}
                 onDragLeave={() => setIsHovering(false)}
                 onDrop={handleFileDrop}
@@ -188,7 +211,9 @@ export default function ImageFilterApp() {
                   <Camera className="h-12 w-12 text-muted-foreground" />
                   <div>
                     <p className="text-lg font-medium">Arraste a imagem aqui</p>
-                    <p className="text-sm text-muted-foreground mt-1">ou clique no botão abaixo para pesquisar</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      ou clique no botão abaixo para pesquisar
+                    </p>
                   </div>
                   <Button onClick={handleUploadClick} className="mt-2">
                     <Upload className="mr-2 h-4 w-4" />
@@ -206,10 +231,13 @@ export default function ImageFilterApp() {
               <Card>
                 <CardContent className="p-6">
                   <div className="aspect-video relative rounded-lg overflow-hidden bg-black/5 dark:bg-white/5 flex items-center justify-center">
-                    <div className="relative max-h-full max-w-full" style={{ filter: selectedFilter }}>
+                    <div
+                      className="relative max-h-full max-w-full"
+                      style={{ filter: selectedFilter }}
+                    >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
-                        src={selectedImage || "/placeholder.svg"}
+                        src={selectedImage || '/placeholder.svg'}
                         alt="Preview"
                         className="max-h-[60vh] max-w-full object-contain"
                       />
@@ -230,12 +258,15 @@ export default function ImageFilterApp() {
                   <div className="space-y-6">
                     <div className="space-y-2">
                       <Label htmlFor="filter">Selecione um filtro</Label>
-                      <Select value={selectedFilter} onValueChange={setSelectedFilter}>
+                      <Select
+                        value={selectedFilter}
+                        onValueChange={setSelectedFilter}
+                      >
                         <SelectTrigger id="filter">
                           <SelectValue placeholder="Selecione um filtro" />
                         </SelectTrigger>
                         <SelectContent>
-                          {filterOptions.map((filter) => (
+                          {filterOptions.map(filter => (
                             <SelectItem key={filter.value} value={filter.value}>
                               {filter.name}
                             </SelectItem>
@@ -256,7 +287,10 @@ export default function ImageFilterApp() {
                             checked={maintainAspectRatio}
                             onCheckedChange={handleAspectRatioToggle}
                           />
-                          <Label htmlFor="aspect-ratio" className="text-sm flex items-center">
+                          <Label
+                            htmlFor="aspect-ratio"
+                            className="text-sm flex items-center"
+                          >
                             {maintainAspectRatio ? (
                               <Lock className="h-3 w-3 mr-1" />
                             ) : (
@@ -276,7 +310,7 @@ export default function ImageFilterApp() {
                             id="width"
                             type="number"
                             min="1"
-                            value={resizeWidth || ""}
+                            value={resizeWidth || ''}
                             onChange={handleWidthChange}
                           />
                         </div>
@@ -288,7 +322,7 @@ export default function ImageFilterApp() {
                             id="height"
                             type="number"
                             min="1"
-                            value={resizeHeight || ""}
+                            value={resizeHeight || ''}
                             onChange={handleHeightChange}
                           />
                         </div>
@@ -307,6 +341,5 @@ export default function ImageFilterApp() {
         </div>
       </div>
     </div>
-  )
+  );
 }
-
