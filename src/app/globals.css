@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @plugin "tailwindcss-animate";
 
@@ -111,6 +111,10 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.552 0.016 285.938);
+}
+
+.pixelated {
+  text-shadow: 5px 5px 15px rgba(169, 169, 169, 0.6);
 }
 
 @layer base {
