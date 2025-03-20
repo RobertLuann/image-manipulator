@@ -279,9 +279,9 @@ export default function ImageFilterApp() {
 
                     {/* Resize Controls */}
                     <div className="space-y-4">
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between space-x-4">
                         <Label htmlFor="resize">Redimensionar</Label>
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center space-x-4">
                           <Switch
                             id="aspect-ratio"
                             checked={maintainAspectRatio}
@@ -296,7 +296,7 @@ export default function ImageFilterApp() {
                             ) : (
                               <Unlock className="h-3 w-3 mr-1" />
                             )}
-                            Aspect Ratio
+                            Manter proporção
                           </Label>
                         </div>
                       </div>
