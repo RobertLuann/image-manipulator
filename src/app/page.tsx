@@ -19,7 +19,6 @@ import { ModeToggle } from '@/components/mode-toggle';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
-import { pressStart2P } from './layout';
 
 // Filter options with their CSS filter values
 const filterOptions = [
@@ -174,9 +173,7 @@ export default function ImageFilterApp() {
     <div className="container mx-auto py-10 px-4">
       <div className="max-w-3xl mx-auto">
         <header className="flex justify-between items-center mb-8">
-          <h1
-            className={`${pressStart2P.className} text-3xl font-bold pixelated`}
-          >
+          <h1 className="press-start-2p-regular text-3xl font-bold pixelated">
             PixArray
           </h1>
           <ModeToggle />

@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 @import 'tailwindcss';
 
 @plugin "tailwindcss-animate";
@@ -115,6 +116,12 @@
 
 .pixelated {
   text-shadow: 5px 5px 15px rgba(169, 169, 169, 0.6);
+}
+
+.press-start-2p-regular {
+  font-family: 'Press Start 2P', cursive;
+  font-weight: 400;
+  font-style: normal;
 }
 
 @layer base {
